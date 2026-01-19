@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class DogPlayerController3D : MonoBehaviour
+public class PlayerDog : MonoBehaviour
 {
     [Header("Movement")]
     public float walkSpeed = 4f;
@@ -11,51 +11,46 @@ public class DogPlayerController3D : MonoBehaviour
     [Header("Gravity")]
     public float gravity = -20f;
 
-    [Header("Camera")]
-    public Transform cameraTransform;
-
-    [Header("Fake Animation")]
-    public float bobFrequency = 10f;
-    public float bobAmount = 0.02f;
-
     private CharacterController controller;
     private Vector3 velocity;
     private Animator anim;
-    private Vector3 startLocalPos;
+
+    // Lưu hướng di chuyển cuối cùng
+    private Vector3 lastMoveDirection = Vector3.forward;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        anim = GetComponentInChildren<Animator>(); // có thì dùng, không có cũng không sao
-        startLocalPos = transform.localPosition;
-
-        if (cameraTransform == null)
-            cameraTransform = Camera.main.transform;
+        anim = GetComponentInChildren<Animator>();
     }
 
     void Update()
     {
-        // ===== INPUT =====
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
+
         Vector3 inputDir = new Vector3(h, 0f, v).normalized;
-
-        // ===== CAMERA RELATIVE MOVE =====
-        Vector3 camForward = cameraTransform.forward;
-        Vector3 camRight = cameraTransform.right;
-        camForward.y = 0;
-        camRight.y = 0;
-
-        Vector3 moveDir = camForward * inputDir.z + camRight * inputDir.x;
 
         float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
 
         // ===== MOVE & ROTATE =====
-        if (moveDir.magnitude > 0.1f)
+        if (inputDir.magnitude > 0.1f)
         {
-            controller.Move(moveDir * currentSpeed * Time.deltaTime);
+            lastMoveDirection = inputDir;
 
-            Quaternion targetRot = Quaternion.LookRotation(moveDir);
+            controller.Move(inputDir * currentSpeed * Time.deltaTime);
+
+            Quaternion targetRot = Quaternion.LookRotation(inputDir);
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
+            );
+        }
+        else
+        {
+            // Giữ hướng cuối cùng khi đứng yên
+            Quaternion targetRot = Quaternion.LookRotation(lastMoveDirection);
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRot,
@@ -70,26 +65,18 @@ public class DogPlayerController3D : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
 
-        // ===== FAKE ANIMATION (NHÚN NHẸ KHI CHẠY) =====
-        if (controller.velocity.magnitude > 0.1f)
-        {
-            float bob = Mathf.Sin(Time.time * bobFrequency) * bobAmount;
-            transform.localPosition = startLocalPos + Vector3.up * bob;
-        }
-        else
-        {
-            transform.localPosition = Vector3.Lerp(
-                transform.localPosition,
-                startLocalPos,
-                Time.deltaTime * 5f
-            );
-        }
-
-        // ===== ANIMATOR (NẾU CÓ) =====
+        // ===== ANIMATION: CHỈ RUN KHI DI CHUYỂN =====
         if (anim != null)
         {
-            float speedPercent = controller.velocity.magnitude / runSpeed;
-            anim.SetFloat("Speed", speedPercent);
+            if (inputDir.magnitude > 0.1f)
+            {
+                float speedPercent = currentSpeed / runSpeed;
+                anim.SetFloat("Speed", speedPercent);
+            }
+            else
+            {
+                anim.SetFloat("Speed", 0f); // Idle
+            }
         }
     }
 }
