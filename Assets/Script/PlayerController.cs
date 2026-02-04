@@ -7,11 +7,12 @@ public class PlayerController : MonoBehaviour
     [Header("Move")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
-    public float gravity = -9.8f;
+    public float gravity = -20f;
 
     [Header("Combat")]
-    public int maxHP = 100;
     public int attackDamage = 20;
+    public int TakeDamage = 20;
+    public Collider attackHitbox;
 
     CharacterController controller;
     Animator animator;
@@ -19,14 +20,14 @@ public class PlayerController : MonoBehaviour
     Vector2 moveInput;
     Vector3 velocity;
 
-    int currentHP;
     bool isDead;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
-        currentHP = maxHP;
+
+        velocity.y = -2f; // GIỮ CHÂN DÍNH ĐẤT
     }
 
     // ================= INPUT =================
@@ -37,19 +38,18 @@ public class PlayerController : MonoBehaviour
         moveInput = context.ReadValue<Vector2>();
     }
 
- public void OnJump(InputAction.CallbackContext context)
-{
-    if (isDead) return;
-    if (!context.started) return;   // CHỈ 1 LẦN
-
-    if (controller.isGrounded)
+    public void OnJump(InputAction.CallbackContext context)
     {
-        velocity.y = jumpForce;
-        animator.SetTrigger("Jump");
-    }
-}
+        if (isDead) return;
+        if (!context.started) return;
 
-    // 👉 THÊM MỚI: ATTACK
+        if (controller.isGrounded)
+        {
+            velocity.y = jumpForce;
+            animator.SetTrigger("Jump");
+        }
+    }
+
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (isDead) return;
@@ -57,60 +57,47 @@ public class PlayerController : MonoBehaviour
 
         animator.SetTrigger("Attack");
     }
-    public Collider attackHitbox;
 
-public void EnableHitbox()
-{
-    attackHitbox.enabled = true;
-}
+    // ================= HITBOX (Animation Event) =================
 
-public void DisableHitbox()
-{
-    attackHitbox.enabled = false;
-}
+    public void EnableHitbox()
+    {
+        if (attackHitbox != null)
+            attackHitbox.enabled = true;
+    }
+
+    public void DisableHitbox()
+    {
+        if (attackHitbox != null)
+            attackHitbox.enabled = false;
+    }
 
     // ================= UPDATE =================
 
-void Update()
-{
-    if (isDead) return;
-
-    // DI CHUYỂN THEO HƯỚNG PLAYER ĐÃ XOAY
-    Vector3 move =
-        transform.forward * moveInput.y +
-        transform.right * moveInput.x;
-
-    controller.Move(move * moveSpeed * Time.deltaTime);
-
-    // Gravity
-    if (controller.isGrounded && velocity.y < 0)
-        velocity.y = -2f;
-
-    velocity.y += gravity * Time.deltaTime;
-    controller.Move(velocity * Time.deltaTime);
-
-    animator.SetFloat("Speed", moveInput.magnitude);
-}
-
-
-    // ================= HP / DIE =================
-
-    public void TakeDamage(int damage)
+    void Update()
     {
         if (isDead) return;
 
-        currentHP -= damage;
+        // MOVE THEO HƯỚNG PLAYER XOAY
+        Vector3 move =
+            transform.forward * moveInput.y +
+            transform.right * moveInput.x;
 
-        if (currentHP <= 0)
-            Die();
+        controller.Move(move * moveSpeed * Time.deltaTime);
+
+        // GRAVITY CHUẨN
+        if (controller.isGrounded && velocity.y < 0)
+            velocity.y = -2f;
+
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+
+        animator.SetFloat("Speed", moveInput.magnitude);
     }
 
-    void Die()
+    // ================= CALLED BY PlayerHealth =================
+    public void SetDead()
     {
         isDead = true;
-        animator.SetBool("IsDead", true);
-
-        moveInput = Vector2.zero;
-        controller.enabled = false;
     }
 }

@@ -3,13 +3,16 @@ using UnityEngine;
 public class AttackHitbox : MonoBehaviour
 {
     public int damage = 20;
+    public string targetTag;
 
-    private void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other)
     {
-        EnemyStats enemy = other.GetComponent<EnemyStats>();
-        if (enemy != null)
-        {
-            enemy.TakeDamage(damage);
-        }
+        if (!other.CompareTag(targetTag)) return;
+
+        if (targetTag == "Enemy")
+            other.GetComponent<EnemyHealth>()?.TakeDamage(damage);
+
+        if (targetTag == "Player")
+            other.GetComponent<PlayerHealth>()?.TakeDamage(damage);
     }
 }
