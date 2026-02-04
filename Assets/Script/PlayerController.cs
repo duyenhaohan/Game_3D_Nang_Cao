@@ -37,17 +37,17 @@ public class PlayerController : MonoBehaviour
         moveInput = context.ReadValue<Vector2>();
     }
 
-    public void OnJump(InputAction.CallbackContext context)
-    {
-        if (isDead) return;
-        if (!context.performed) return;
+ public void OnJump(InputAction.CallbackContext context)
+{
+    if (isDead) return;
+    if (!context.started) return;   // CHỈ 1 LẦN
 
-        if (controller.isGrounded)
-        {
-            velocity.y = jumpForce;
-            animator.SetTrigger("Jump");
-        }
+    if (controller.isGrounded)
+    {
+        velocity.y = jumpForce;
+        animator.SetTrigger("Jump");
     }
+}
 
     // 👉 THÊM MỚI: ATTACK
     public void OnAttack(InputAction.CallbackContext context)
@@ -71,30 +71,27 @@ public void DisableHitbox()
 
     // ================= UPDATE =================
 
-    void Update()
-    {
-        if (isDead) return;
+void Update()
+{
+    if (isDead) return;
 
-        Vector3 move = new Vector3(moveInput.x, 0, moveInput.y);
+    // DI CHUYỂN THEO HƯỚNG PLAYER ĐÃ XOAY
+    Vector3 move =
+        transform.forward * moveInput.y +
+        transform.right * moveInput.x;
 
-        if (move.sqrMagnitude > 0.01f)
-            transform.forward = move;
+    controller.Move(move * moveSpeed * Time.deltaTime);
 
-        controller.Move(move * moveSpeed * Time.deltaTime);
+    // Gravity
+    if (controller.isGrounded && velocity.y < 0)
+        velocity.y = -2f;
 
-        // Gravity
-        if (controller.isGrounded && velocity.y < 0)
-            velocity.y = -2f;
+    velocity.y += gravity * Time.deltaTime;
+    controller.Move(velocity * Time.deltaTime);
 
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+    animator.SetFloat("Speed", moveInput.magnitude);
+}
 
-        // Animator
-        animator.SetFloat("Speed", move.magnitude);
-        animator.SetFloat("MoveX", moveInput.x);
-        animator.SetFloat("MoveY", moveInput.y);
-        animator.SetBool("IsGrounded", controller.isGrounded);
-    }
 
     // ================= HP / DIE =================
 

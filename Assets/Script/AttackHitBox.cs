@@ -6,7 +6,7 @@ public class AttackHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        EnemyHealth enemy = other.GetComponent<EnemyHealth>();
+        EnemyStats enemy = other.GetComponent<EnemyStats>();
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
