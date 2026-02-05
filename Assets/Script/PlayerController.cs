@@ -11,7 +11,6 @@ public class PlayerController : MonoBehaviour
 
     [Header("Combat")]
     public int attackDamage = 20;
-    public int TakeDamage = 20;
     public Collider attackHitbox;
 
     CharacterController controller;

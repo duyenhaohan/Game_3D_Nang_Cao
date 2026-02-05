@@ -9,7 +9,7 @@ public class VolumeManager : MonoBehaviour
 
     void Start()
     {
-        float volume = PlayerPrefs.GetFloat("MasterVolume", 1f);
+        float volume = PlayerPrefs.GetFloat("MasterVolume", 3f);
 
         volumeSlider.value = volume;
         SetVolume(volume);
@@ -20,7 +20,7 @@ public class VolumeManager : MonoBehaviour
     void SetVolume(float value)
     {
         // Convert 0–1 → decibel
-        float dB = Mathf.Log10(Mathf.Clamp(value, 0.0001f, 1f)) * 20f;
+        float dB = Mathf.Log10(Mathf.Clamp(value, 0.0001f, 3f)) * 80f;
 
         audioMixer.SetFloat("MasterVolume", dB);
 
