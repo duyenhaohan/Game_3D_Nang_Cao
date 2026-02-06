@@ -2,71 +2,26 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
+
 public class PlayerController : MonoBehaviour
 {
-    [Header("Move")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
     public float gravity = -20f;
-
-    [Header("Combat")]
-    public int attackDamage = 20;
-    public Collider attackHitbox;
-    public float attackStartDelay = 0.1f;
-    public float attackActiveTime = 0.2f;
 
     CharacterController controller;
     Animator animator;
 
     Vector2 moveInput;
     Vector3 velocity;
-
     bool isDead;
-    bool isAttacking;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
-
-        velocity.y = -2f; // GI? ch�n d�nh d?t
-        // PlayerController.cs - Th�m Awake d? debug
-
-        // Debug attackHitbox
-        if (attackHitbox == null)
-        {
-            Debug.LogError("AttackHitbox not assigned in Inspector!");
-        }
-        else
-        {
-            Debug.Log($"AttackHitbox assigned: {attackHitbox.name}");
-            attackHitbox.enabled = false; // �?m b?o t?t l�c d?u
-            attackHitbox.isTrigger = true;
-
-            AttackHitbox hitbox = attackHitbox.GetComponent<AttackHitbox>();
-            if (hitbox != null)
-            {
-                hitbox.damage = attackDamage;
-                hitbox.targetTag = "Enemy";
-            }
-            else
-            {
-                Debug.LogError("AttackHitbox missing AttackHitbox component!");
-            }
-
-            Rigidbody rb = attackHitbox.GetComponent<Rigidbody>();
-            if (rb == null)
-            {
-                rb = attackHitbox.gameObject.AddComponent<Rigidbody>();
-                rb.isKinematic = true;
-                rb.useGravity = false;
-            }
-        }
-
         velocity.y = -2f;
     }
-
-    // ================= INPUT =================
 
     public void OnMove(InputAction.CallbackContext context)
     {
@@ -92,50 +47,31 @@ public class PlayerController : MonoBehaviour
         if (!context.performed) return;
 
         animator.SetTrigger("Attack");
-        if (!isAttacking)
-            StartCoroutine(AttackWindow());
+        // ❌ KHÔNG bật hitbox ở đây
     }
+public AttackHitbox swordHitbox;
 
-    // ================= HITBOX (Animation Event) =================
+public void EnableHitbox()
+{
+    if (swordHitbox != null)
+        swordHitbox.EnableHitbox();
+}
 
-    public void EnableHitbox()
-    {
-        if (attackHitbox != null)
-            attackHitbox.enabled = true;
-    }
-
-    public void DisableHitbox()
-    {
-        if (attackHitbox != null)
-            attackHitbox.enabled = false;
-    }
-
-    System.Collections.IEnumerator AttackWindow()
-    {
-        isAttacking = true;
-        if (attackStartDelay > 0f)
-            yield return new WaitForSeconds(attackStartDelay);
-        EnableHitbox();
-        if (attackActiveTime > 0f)
-            yield return new WaitForSeconds(attackActiveTime);
-        DisableHitbox();
-        isAttacking = false;
-    }
-
-    // ================= UPDATE =================
-
+public void DisableHitbox()
+{
+    if (swordHitbox != null)
+        swordHitbox.DisableHitbox();
+}
     void Update()
     {
         if (isDead) return;
 
-        // MOVE THEO HU?NG PLAYER XOAY
         Vector3 move =
             transform.forward * moveInput.y +
             transform.right * moveInput.x;
 
         controller.Move(move * moveSpeed * Time.deltaTime);
 
-        // GRAVITY CHU?N
         if (controller.isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
@@ -145,7 +81,6 @@ public class PlayerController : MonoBehaviour
         animator.SetFloat("Speed", moveInput.magnitude);
     }
 
-    // ================= CALLED BY PlayerHealth =================
     public void SetDead()
     {
         isDead = true;
