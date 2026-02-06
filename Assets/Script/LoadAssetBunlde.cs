@@ -3,8 +3,13 @@ using UnityEngine;
 public class LoadAssetBundle : MonoBehaviour
 {
     public string bundleName = "player";
-    public string materialName = "Sword_Red";
+    public string swordmaterialName = "Sword_Red";
+    public string shieldmaterialName = "Shield_Red";
+    public string hairmaterialName = "Hair_Red";
+      
     public MeshRenderer swordRenderer;
+    public MeshRenderer shieldRenderer;
+    public MeshRenderer hairRenderer;
 
     void Start()
     {
@@ -17,11 +22,22 @@ public class LoadAssetBundle : MonoBehaviour
             return;
         }
 
-        Material mat = bundle.LoadAsset<Material>(materialName);
-        if (mat != null)
+        Material swordmat = bundle.LoadAsset<Material>(swordmaterialName);
+        if (swordmat != null)
         {
-            swordRenderer.material = mat;
+            swordRenderer.material = swordmat;
         }
+        Material shieldmat = bundle.LoadAsset<Material>(shieldmaterialName);
+        if (shieldmat != null)
+        {
+            shieldRenderer.material = shieldmat;
+        }
+         Material hairmat = bundle.LoadAsset<Material>(hairmaterialName);
+        if (hairmat != null)
+        {
+            hairRenderer.material = hairmat;
+        }
+
 
         bundle.Unload(false);
     }
