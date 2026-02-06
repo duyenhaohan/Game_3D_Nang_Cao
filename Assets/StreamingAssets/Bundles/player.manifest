@@ -1,0 +1,25 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.2.14f1
+CRC: 89118337
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 00092c9ebc606d7e25e05379deff5afc
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 4afb0d898c1c22a5e88248733bd69457
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: e0a0ef446d1f07d459c65f4b76fd1216
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Sword_Red.mat
+- Assets/Hair_Red.mat
+- Assets/Shield_Red.mat
+Dependencies: []
