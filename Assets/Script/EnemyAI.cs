@@ -134,3 +134,4 @@ public class EnemyAI : MonoBehaviour
         animator.SetBool("IsMoving", vel.magnitude > 0.1f);
     }
 }
+    

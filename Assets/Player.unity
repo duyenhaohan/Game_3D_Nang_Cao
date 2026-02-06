@@ -1335,6 +1335,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 863686005}
   m_SourcePrefab: {fileID: 100100000, guid: 2554008d6447a2540b44e55f0c0b576e, type: 3}
+--- !u!23 &348295742 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4066668297557381497, guid: 2dfbb63c9cdf7504faf4ff26b0581598, type: 3}
+  m_PrefabInstance: {fileID: 433757426}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &382236531
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3766,8 +3771,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadAssetBundle
   bundleName: player
-  materialName: Sword_Red
+  swordmaterialName: Sword_Red
+  shieldmaterialName: Shield_Red
   swordRenderer: {fileID: 1448775734}
+  shieldRenderer: {fileID: 348295742}
 --- !u!1 &1572617341 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9154215057541871321, guid: 2554008d6447a2540b44e55f0c0b576e, type: 3}
