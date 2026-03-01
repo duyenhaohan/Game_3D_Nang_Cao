@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+
 public class FirstPersonLook : MonoBehaviour
 {
     public Transform playerBody;
@@ -11,8 +13,13 @@ public class FirstPersonLook : MonoBehaviour
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // 👉 XÓA hoặc COMMENT 2 dòng này để không ẩn chuột
+        // Cursor.lockState = CursorLockMode.Locked;
+        // Cursor.visible = false;
+        
+        // Có thể thêm dòng này để đảm bảo chuột luôn hiện
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void OnLook(InputAction.CallbackContext context)

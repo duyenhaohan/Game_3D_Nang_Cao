@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Game_3D_Nang_Cao.slnx"
+    "dotnet.defaultSolution": "Game3D.slnx"
 }

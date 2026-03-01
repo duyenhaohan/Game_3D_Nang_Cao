@@ -27,24 +27,26 @@ public class AttackHitbox : MonoBehaviour
     }
 
     // ❗ DÙNG COLLISION – KHÔNG DÙNG TRIGGER
-  void OnCollisionEnter(Collision collision)
+// SỬA: Đổi từ OnCollisionEnter sang OnTriggerEnter
+void OnTriggerEnter(Collider other)  // Thay vì OnCollisionEnter
 {
-    Debug.Log("⚔️ Sword collided with: " + collision.gameObject.name);
+    Debug.Log("⚔️ Sword collided with: " + other.gameObject.name);
 
-    if (!collision.gameObject.CompareTag(targetTag))
+    if (!other.gameObject.CompareTag(targetTag))
     {
-        Debug.Log("❌ Wrong tag: " + collision.gameObject.tag);
+        Debug.Log("❌ Wrong tag: " + other.gameObject.tag);
         return;
     }
 
     Debug.Log("✅ Correct target tag!");
 
-    collision.gameObject
-        .GetComponentInParent<EnemyHealth>()
-        ?.TakeDamage(damage);
-
-    Debug.Log("💥 Damage applied");
-
-    hasHit = true;
+    // QUAN TRỌNG: EnemyHealth nằm trên Parent (Enemy) không phải con
+    EnemyHealth enemyHealth = other.GetComponentInParent<EnemyHealth>();
+    if (enemyHealth != null)
+    {
+        enemyHealth.TakeDamage(damage);
+        Debug.Log("💥 Damage applied");
+        hasHit = true;
+    }
 }
 }

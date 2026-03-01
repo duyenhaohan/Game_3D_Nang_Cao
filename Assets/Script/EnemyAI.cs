@@ -15,6 +15,7 @@ public class EnemyAI : MonoBehaviour
     public float patrolRadius = 10f;
     public float detectRange = 5f;
     public float attackRange = 2f;
+     public EnemyAttack enemyAttack;
 
     Vector3 patrolCenter;
     float attackCooldown;
