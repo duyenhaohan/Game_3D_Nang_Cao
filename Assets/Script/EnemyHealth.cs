@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI; // THÊM DÒNG NÀY
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -9,6 +10,9 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("Heal")]
     public float healSpeed = 20f;   // HP / giây
+    
+    [Header("UI")]
+    public EnemyHealthBar healthBarUI; // Kéo object có script EnemyHealthBar vào đây
 
     Animator animator;
     EnemyAI ai;
@@ -25,6 +29,15 @@ public class EnemyHealth : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         col = GetComponent<Collider>();
     }
+    
+    void Start()
+    {
+        // Khởi tạo thanh máu
+        if (healthBarUI != null)
+        {
+            healthBarUI.UpdateHealth(currentHP, maxHP);
+        }
+    }
 
     // ================= DAMAGE =================
     public void TakeDamage(int dmg)
@@ -35,6 +48,12 @@ public class EnemyHealth : MonoBehaviour
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
 
         animator.SetTrigger("Hit");
+        
+        // Cập nhật thanh máu
+        if (healthBarUI != null)
+        {
+            healthBarUI.UpdateHealth(currentHP, maxHP);
+        }
 
         if (currentHP <= 0)
             Die();
@@ -47,6 +66,12 @@ public class EnemyHealth : MonoBehaviour
 
         currentHP += Mathf.RoundToInt(healSpeed * Time.deltaTime);
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
+        
+        // Cập nhật thanh máu
+        if (healthBarUI != null)
+        {
+            healthBarUI.UpdateHealth(currentHP, maxHP);
+        }
     }
 
     // ================= DIE =================
@@ -59,6 +84,12 @@ public class EnemyHealth : MonoBehaviour
         if (ai != null) ai.enabled = false;
         if (agent != null) agent.isStopped = true;
         if (col != null) col.enabled = false;
+        
+        // Ẩn thanh máu khi chết
+        if (healthBarUI != null)
+        {
+            healthBarUI.gameObject.SetActive(false);
+        }
 
         Destroy(gameObject, 4f);
     }

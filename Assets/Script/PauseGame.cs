@@ -1,45 +1,36 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PauseGame : MonoBehaviour
 {
     public GameObject pauseCanvas;
-
     bool isPaused = false;
 
     void Start()
     {
         pauseCanvas.SetActive(false);
-        Time.timeScale = 1f;
+        // Không cần quản lý cursor gì cả
     }
 
-    public void OnPause(InputAction.CallbackContext context)
+    void Update()
     {
-        if (!context.performed) return;
-
-        if (isPaused)
-            ResumeGame();
-        else
-            Pause();
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isPaused = !isPaused;
+            pauseCanvas.SetActive(isPaused);
+            Time.timeScale = isPaused ? 0f : 1f;
+        }
     }
-
-    void Pause()
-    {
-        isPaused = true;
-        pauseCanvas.SetActive(true);
-        Time.timeScale = 0f;
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-    }
-
+    
     public void ResumeGame()
     {
         isPaused = false;
         pauseCanvas.SetActive(false);
         Time.timeScale = 1f;
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+    }
+    
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }
