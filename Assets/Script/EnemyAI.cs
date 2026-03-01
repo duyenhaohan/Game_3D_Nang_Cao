@@ -13,7 +13,7 @@ public class EnemyAI : MonoBehaviour
     public Transform altar;
 
     public float patrolRadius = 10f;
-    public float detectRange = 8f;
+    public float detectRange = 5f;
     public float attackRange = 2f;
      public EnemyAttack enemyAttack;
 
