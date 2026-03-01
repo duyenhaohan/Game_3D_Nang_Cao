@@ -24,10 +24,11 @@ public class ChestInteract : MonoBehaviour
         if (animator != null)
         {
             animator.SetBool("isOpen", true);
-        }
-
+            ChestQuestManager.Instance.AddChest(); 
         // Xoá rương sau khi animation chạy xong
-        Destroy(gameObject, 3f); // chỉnh thời gian theo độ dài animation
+            Destroy(gameObject, 3f);
+        }
+         // chỉnh thời gian theo độ dài animation
     }
 
     void OnTriggerEnter(Collider other)
