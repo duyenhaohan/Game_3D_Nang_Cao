@@ -64,6 +64,7 @@ public void DisableHitbox()
 }
     void Update()
     {
+        Debug.Log(controller.isGrounded);
         if (isDead) return;
 
         Vector3 move =
