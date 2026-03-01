@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public class BossController1 : MonoBehaviour
+public class BossController : MonoBehaviour
 {
     [Header("Components")]
     public Animator animator;
@@ -14,57 +14,70 @@ public class BossController1 : MonoBehaviour
     public float runSpeed = 3.5f;
     public float rotationSpeed = 5f;
     
-    [Header("Detection")]
+    [Header("Combat")]
     public float detectionRange = 15f;
-    public float stopRange = 3f;
+    public float attackRange = 3f;
     
-    private float speedHash;
-    private float hitHash;
-    private float dieHash;
+    // Animator parameters
+    private readonly int speedHash = Animator.StringToHash("Speed");
+    private readonly int hitHash = Animator.StringToHash("getHit");
+    private readonly int dieHash = Animator.StringToHash("die");
+    
     private bool isDead;
     
     void Start()
     {
-        animator = GetComponent<Animator>();
-        agent = GetComponent<NavMeshAgent>();
-        bossHealth = GetComponent<BossHealth>();
+        if (animator == null) animator = GetComponent<Animator>();
+        if (agent == null) agent = GetComponent<NavMeshAgent>();
+        if (bossHealth == null) bossHealth = GetComponent<BossHealth>();
         
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
             player = playerObj.transform;
         
         agent.speed = walkSpeed;
-        agent.stoppingDistance = stopRange;
+        agent.stoppingDistance = attackRange * 0.8f;
     }
     
     void Update()
     {
         if (bossHealth.IsDead() || player == null) return;
         
+        HandleBehavior();
+        UpdateAnimation();
+    }
+    
+    void HandleBehavior()
+    {
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         
-        if (distanceToPlayer <= detectionRange)
+        if (distanceToPlayer > detectionRange)
         {
-            // Quay mặt về player
-            FaceTarget();
+            agent.ResetPath();
+            return;
+        }
+        
+        FaceTarget();
+        
+        if (distanceToPlayer <= attackRange)
+        {
+            // Trong tầm đánh - dừng lại
+            agent.ResetPath();
             
-            // Di chuyển đến player
+            // Animation tấn công (tượng trưng)
+            if (animator != null)
+                animator.SetTrigger("Attack");
+        }
+        else
+        {
+            // Đuổi theo player
             agent.SetDestination(player.position);
             
-            // Điều chỉnh tốc độ
             if (distanceToPlayer > detectionRange * 0.7f)
                 agent.speed = runSpeed;
             else
                 agent.speed = walkSpeed;
         }
-        else
-        {
-            agent.ResetPath();
-        }
-        
-        // Cập nhật animation
-        float speed = agent.velocity.magnitude / runSpeed;
-        animator.SetFloat("Speed", speed);
     }
     
     void FaceTarget()
@@ -79,10 +92,16 @@ public class BossController1 : MonoBehaviour
         }
     }
     
+    void UpdateAnimation()
+    {
+        float speed = agent.velocity.magnitude / runSpeed;
+        animator.SetFloat(speedHash, speed);
+    }
+    
     public void TakeHit()
     {
         if (isDead) return;
-        animator.SetTrigger("Hit");
+        animator.SetTrigger(hitHash);
     }
     
     public void Die()
@@ -90,11 +109,12 @@ public class BossController1 : MonoBehaviour
         if (isDead) return;
         
         isDead = true;
-        animator.SetTrigger("Die");
+        animator.SetTrigger(dieHash);
         
         agent.enabled = false;
         enabled = false;
         
+        Debug.Log("👑 Boss đã chết!");
         Destroy(gameObject, 3f);
     }
 }
