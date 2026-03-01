@@ -5,5 +5,7 @@ public enum EnemyState
     Attack,
     Flee,
     Heal,
-    Return
+    Return,
+    Hit,
+    Die
 }
