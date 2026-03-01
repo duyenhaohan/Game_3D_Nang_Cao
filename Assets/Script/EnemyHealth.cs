@@ -100,6 +100,7 @@ public class EnemyHealth : MonoBehaviour
 
         if (animator != null)
             animator.SetBool("IsDead", true);
+            
 
         if (audioSource != null && deathSound != null)
             audioSource.PlayOneShot(deathSound);
