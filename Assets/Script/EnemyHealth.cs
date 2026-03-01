@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UI; // THÊM DÒNG NÀY
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -9,17 +8,24 @@ public class EnemyHealth : MonoBehaviour
     public int currentHP;
 
     [Header("Heal")]
-    public float healSpeed = 20f;   // HP / giây
+    public float healSpeed = 20f;
     
     [Header("UI")]
-    public EnemyHealthBar healthBarUI; // Kéo object có script EnemyHealthBar vào đây
+    public EnemyHealthBar healthBarUI;
+    
+    [Header("Effects")]
+    public ParticleSystem hitEffect;
+    public ParticleSystem deathEffect;
+    public AudioClip hurtSound;
+    public AudioClip deathSound;
 
-    Animator animator;
-    EnemyAI ai;
-    NavMeshAgent agent;
-    Collider col;
-
-    bool isDead;
+    private Animator animator;
+    private EnemyAI ai;
+    private NavMeshAgent agent;
+    private Collider col;
+    private AudioSource audioSource;
+    private bool isDead;
+    private Renderer enemyRenderer;
 
     void Awake()
     {
@@ -28,18 +34,19 @@ public class EnemyHealth : MonoBehaviour
         ai = GetComponent<EnemyAI>();
         agent = GetComponent<NavMeshAgent>();
         col = GetComponent<Collider>();
-    }
-    
-    void Start()
-    {
-        // Khởi tạo thanh máu
-        if (healthBarUI != null)
-        {
-            healthBarUI.UpdateHealth(currentHP, maxHP);
-        }
+        audioSource = GetComponent<AudioSource>();
+        enemyRenderer = GetComponentInChildren<Renderer>();
+        
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
 
-    // ================= DAMAGE =================
+    void Start()
+    {
+        if (healthBarUI != null)
+            healthBarUI.UpdateHealth(currentHP, maxHP);
+    }
+
     public void TakeDamage(int dmg)
     {
         if (isDead) return;
@@ -47,19 +54,35 @@ public class EnemyHealth : MonoBehaviour
         currentHP -= dmg;
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
 
-        animator.SetTrigger("Hit");
+        if (animator != null)
+            animator.SetTrigger("Hit");
+
+        if (audioSource != null && hurtSound != null)
+            audioSource.PlayOneShot(hurtSound);
+
+        if (hitEffect != null)
+            hitEffect.Play();
+
+        StartCoroutine(FlashRed());
         
-        // Cập nhật thanh máu
         if (healthBarUI != null)
-        {
             healthBarUI.UpdateHealth(currentHP, maxHP);
-        }
 
         if (currentHP <= 0)
             Die();
     }
 
-    // ================= HEAL =================
+    System.Collections.IEnumerator FlashRed()
+    {
+        if (enemyRenderer != null)
+        {
+            Color originalColor = enemyRenderer.material.color;
+            enemyRenderer.material.color = Color.red;
+            yield return new WaitForSeconds(0.1f);
+            enemyRenderer.material.color = originalColor;
+        }
+    }
+
     public void HealOverTime()
     {
         if (isDead) return;
@@ -67,34 +90,37 @@ public class EnemyHealth : MonoBehaviour
         currentHP += Mathf.RoundToInt(healSpeed * Time.deltaTime);
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
         
-        // Cập nhật thanh máu
         if (healthBarUI != null)
-        {
             healthBarUI.UpdateHealth(currentHP, maxHP);
-        }
     }
 
-    // ================= DIE =================
     void Die()
     {
         isDead = true;
 
-        animator.SetBool("IsDead", true);
+        if (animator != null)
+            animator.SetBool("IsDead", true);
+
+        if (audioSource != null && deathSound != null)
+            audioSource.PlayOneShot(deathSound);
+
+        if (deathEffect != null)
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
 
         if (ai != null) ai.enabled = false;
         if (agent != null) agent.isStopped = true;
         if (col != null) col.enabled = false;
         
-        // Ẩn thanh máu khi chết
         if (healthBarUI != null)
-        {
             healthBarUI.gameObject.SetActive(false);
-        }
 
-        Destroy(gameObject, 4f);
+        AttackHitbox[] hitboxes = GetComponentsInChildren<AttackHitbox>();
+        foreach (AttackHitbox hitbox in hitboxes)
+            hitbox.enabled = false;
+
+        Destroy(gameObject, 3f);
     }
 
-    // ================= UTIL =================
     public float GetHPPercent()
     {
         return (float)currentHP / maxHP;

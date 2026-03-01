@@ -3,50 +3,80 @@ using UnityEngine;
 public class AttackHitbox : MonoBehaviour
 {
     public int damage = 20;
-    public string targetTag; // "Enemy" hoặc "Player"
-
+    public string targetTag = "Enemy"; // "Enemy" hoặc "Player" hoặc "Boss"
+    
     private Collider hitbox;
     private bool hasHit;
+    private Rigidbody rb;
+    private GameObject owner;
 
     void Awake()
     {
         hitbox = GetComponent<Collider>();
+        if (hitbox == null)
+            hitbox = gameObject.AddComponent<BoxCollider>();
+        
         hitbox.enabled = false;
+        hitbox.isTrigger = true;
+        
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = gameObject.AddComponent<Rigidbody>();
+        
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        
+        owner = transform.root.gameObject;
     }
 
-    // ===== GỌI BẰNG ANIMATION EVENT =====
     public void EnableHitbox()
     {
         hasHit = false;
         hitbox.enabled = true;
+        Debug.Log($"✅ Hitbox ENABLED - Target: {targetTag}");
     }
 
     public void DisableHitbox()
     {
         hitbox.enabled = false;
+        Debug.Log($"❌ Hitbox DISABLED");
     }
 
-    // ❗ DÙNG COLLISION – KHÔNG DÙNG TRIGGER
-// SỬA: Đổi từ OnCollisionEnter sang OnTriggerEnter
-void OnTriggerEnter(Collider other)  // Thay vì OnCollisionEnter
-{
-    Debug.Log("⚔️ Sword collided with: " + other.gameObject.name);
-
-    if (!other.gameObject.CompareTag(targetTag))
+    void OnTriggerEnter(Collider other)
     {
-        Debug.Log("❌ Wrong tag: " + other.gameObject.tag);
-        return;
-    }
+        if (other.transform.root == owner.transform)
+            return;
 
-    Debug.Log("✅ Correct target tag!");
+        if (hasHit) return;
 
-    // QUAN TRỌNG: EnemyHealth nằm trên Parent (Enemy) không phải con
-    EnemyHealth enemyHealth = other.GetComponentInParent<EnemyHealth>();
-    if (enemyHealth != null)
-    {
-        enemyHealth.TakeDamage(damage);
-        Debug.Log("💥 Damage applied");
-        hasHit = true;
+        if (!other.CompareTag(targetTag))
+            return;
+
+        Debug.Log($"⚔️ Hitbox trúng: {other.gameObject.name} với tag {targetTag}");
+
+        // XỬ LÝ THEO TAG
+        if (targetTag == "Enemy")
+        {
+            // Player đánh Enemy
+            EnemyHealth enemyHealth = other.GetComponentInParent<EnemyHealth>();
+            if (enemyHealth != null && !enemyHealth.IsDead())
+            {
+                enemyHealth.TakeDamage(damage);
+                Debug.Log($"💥 Gây {damage} sát thương cho Enemy");
+                hasHit = true;
+            }
+        }
+        else if (targetTag == "Player")
+        {
+            // Enemy đánh Player
+            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+            if (playerHealth != null && !playerHealth.IsDead())
+            {
+                playerHealth.TakeDamage(damage);
+                Debug.Log($"💥 Gây {damage} sát thương cho Player");
+                hasHit = true;
+            }
+        }
+      
     }
-}
 }
