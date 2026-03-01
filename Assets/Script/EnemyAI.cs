@@ -8,6 +8,7 @@ public class EnemyAI : MonoBehaviour
     public NavMeshAgent agent;
     public Animator animator;
     public EnemyHealth health;
+    public EnemyAttack enemyAttack;
 
     public Transform player;
     public Transform altar;
@@ -15,19 +16,42 @@ public class EnemyAI : MonoBehaviour
     public float patrolRadius = 10f;
     public float detectRange = 8f;
     public float attackRange = 2f;
-     public EnemyAttack enemyAttack;
+    public float fleeHealthPercent = 0.3f;
 
-    Vector3 patrolCenter;
-    float attackCooldown;
+    private Vector3 patrolCenter;
+    private float attackCooldown;
+    private float nextAttackTime;
+    
+    // Animator parameters
+    private readonly int moveXHash = Animator.StringToHash("MoveX");
+    private readonly int moveYHash = Animator.StringToHash("MoveY");
+    private readonly int attackHash = Animator.StringToHash("Attack");
+    private readonly int isMovingHash = Animator.StringToHash("IsMoving");
+    private readonly int isDeadHash = Animator.StringToHash("IsDead");
+    private readonly int inBattleHash = Animator.StringToHash("InBattle");
+    private readonly int hitHash = Animator.StringToHash("Hit");
 
     void Start()
     {
         patrolCenter = transform.position;
+        
+        if (agent == null) agent = GetComponent<NavMeshAgent>();
+        if (animator == null) animator = GetComponent<Animator>();
+        if (health == null) health = GetComponent<EnemyHealth>();
+        if (enemyAttack == null) enemyAttack = GetComponent<EnemyAttack>();
+        
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+            player = playerObj.transform;
+        
         ChangeState(EnemyState.Patrol);
     }
 
     void Update()
     {
+        if (health.IsDead()) return;
+        if (player == null) return;
+
         UpdateMoveAnim();
 
         switch (state)
@@ -38,6 +62,7 @@ public class EnemyAI : MonoBehaviour
             case EnemyState.Flee: UpdateFlee(); break;
             case EnemyState.Heal: UpdateHeal(); break;
             case EnemyState.Return: UpdateReturn(); break;
+            case EnemyState.Hit: UpdateHit(); break;
         }
     }
 
@@ -46,22 +71,21 @@ public class EnemyAI : MonoBehaviour
         state = newState;
     }
 
-    // ---------- STATES ----------
-
     void UpdatePatrol()
     {
-        animator.SetBool("InBattle", false);
+        animator.SetBool(inBattleHash, false);
 
         if (!agent.hasPath || agent.remainingDistance < 0.5f)
             MoveRandom();
 
-        if (Vector3.Distance(transform.position, player.position) < detectRange)
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+        if (distToPlayer < detectRange)
             ChangeState(EnemyState.Chase);
     }
 
     void UpdateChase()
     {
-        animator.SetBool("InBattle", true);
+        animator.SetBool(inBattleHash, true);
         agent.SetDestination(player.position);
 
         float dist = Vector3.Distance(transform.position, player.position);
@@ -69,29 +93,39 @@ public class EnemyAI : MonoBehaviour
         if (dist <= attackRange)
             ChangeState(EnemyState.Attack);
 
-        if (health.GetHPPercent() <= 0.3f)
+        if (health.GetHPPercent() <= fleeHealthPercent && altar != null)
             ChangeState(EnemyState.Flee);
     }
 
     void UpdateAttack()
     {
         agent.ResetPath();
-        transform.LookAt(player);
+        
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0;
+        transform.rotation = Quaternion.LookRotation(direction);
 
         attackCooldown -= Time.deltaTime;
 
         if (attackCooldown <= 0)
         {
-            animator.SetTrigger("Attack");
+            animator.SetTrigger(attackHash);
             attackCooldown = 1.5f;
         }
 
-        if (Vector3.Distance(transform.position, player.position) > attackRange)
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (dist > attackRange)
             ChangeState(EnemyState.Chase);
     }
 
     void UpdateFlee()
     {
+        if (altar == null)
+        {
+            ChangeState(EnemyState.Chase);
+            return;
+        }
+        
         agent.SetDestination(altar.position);
 
         if (Vector3.Distance(transform.position, altar.position) < 1f)
@@ -100,11 +134,13 @@ public class EnemyAI : MonoBehaviour
 
     void UpdateHeal()
     {
-        health.currentHP += Mathf.RoundToInt(20 * Time.deltaTime);
-        health.currentHP = Mathf.Min(health.currentHP, health.maxHP);
-
-        if (health.currentHP >= health.maxHP)
-            ChangeState(EnemyState.Return);
+        if (health != null)
+        {
+            health.HealOverTime();
+            
+            if (health.GetHPPercent() >= 1f)
+                ChangeState(EnemyState.Return);
+        }
     }
 
     void UpdateReturn()
@@ -115,24 +151,43 @@ public class EnemyAI : MonoBehaviour
             ChangeState(EnemyState.Patrol);
     }
 
-    // ---------- HELPERS ----------
+    void UpdateHit()
+    {
+        // Wait for hit animation to finish
+        Invoke("ReturnToChase", 0.5f);
+    }
+
+    void ReturnToChase()
+    {
+        if (state == EnemyState.Hit)
+            ChangeState(EnemyState.Chase);
+    }
 
     void MoveRandom()
     {
         Vector3 rand = patrolCenter + Random.insideUnitSphere * patrolRadius;
+        rand.y = patrolCenter.y;
+        
         NavMeshHit hit;
-        NavMesh.SamplePosition(rand, out hit, patrolRadius, NavMesh.AllAreas);
-        agent.SetDestination(hit.position);
+        if (NavMesh.SamplePosition(rand, out hit, patrolRadius, NavMesh.AllAreas))
+            agent.SetDestination(hit.position);
     }
 
     void UpdateMoveAnim()
     {
+        if (agent == null || animator == null) return;
+        
         Vector3 vel = agent.velocity;
         Vector3 localDir = transform.InverseTransformDirection(vel);
 
-        animator.SetFloat("MoveX", localDir.x);
-        animator.SetFloat("MoveY", localDir.z);
-        animator.SetBool("IsMoving", vel.magnitude > 0.1f);
+        animator.SetFloat(moveXHash, localDir.x);
+        animator.SetFloat(moveYHash, localDir.z);
+        animator.SetBool(isMovingHash, vel.magnitude > 0.1f);
+    }
+
+    public void TakeHit()
+    {
+        ChangeState(EnemyState.Hit);
+        animator.SetTrigger(hitHash);
     }
 }
-    
