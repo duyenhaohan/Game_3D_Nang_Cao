@@ -18127,7 +18127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a072a8e4599c6344e91781f1cfd666b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossHealth
-  maxHP: 500
+  maxHP: 400
   currentHP: 0
   healthBar: {fileID: 1473844535}
   healthText: {fileID: 0}
@@ -19200,7 +19200,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb21931c601f528438c8f3814ab03e4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  maxHP: 100000
+  maxHP: 700
   currentHP: 20
   contactDamage: 20
   contactDamageCooldown: 0.5
