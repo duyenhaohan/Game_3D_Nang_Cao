@@ -15,6 +15,12 @@ EditorBuildSettings:
     path: Assets/Player.unity
     guid: 603dda79aae45414d869a9f58f84ef24
   - enabled: 1
+    path: Assets/Scenes/Map mecung.unity
+    guid: 9bcdc74d3dae9e4438fe98cedd899b77
+  - enabled: 1
+    path: Assets/Scenes/Win.unity
+    guid: 86f4add0d3c1dd649848a8850ccae836
+  - enabled: 1
     path: Assets/Scenes/GameOver.unity
     guid: 3aa0115a132f9914891c66cd2f26f719
   m_configObjects:

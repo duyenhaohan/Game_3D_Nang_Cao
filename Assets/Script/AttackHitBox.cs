@@ -3,7 +3,7 @@ using UnityEngine;
 public class AttackHitbox : MonoBehaviour
 {
     public int damage = 20;
-    public string targetTag = "Enemy"; // "Enemy" hoặc "Player" hoặc "Boss"
+    public string targetTag = "Enemy"; // "Enemy" hoặc "Player"
     
     private Collider hitbox;
     private bool hasHit;
@@ -33,13 +33,11 @@ public class AttackHitbox : MonoBehaviour
     {
         hasHit = false;
         hitbox.enabled = true;
-        Debug.Log($"✅ Hitbox ENABLED - Target: {targetTag}");
     }
 
     public void DisableHitbox()
     {
         hitbox.enabled = false;
-        Debug.Log($"❌ Hitbox DISABLED");
     }
 
     void OnTriggerEnter(Collider other)
@@ -54,21 +52,30 @@ public class AttackHitbox : MonoBehaviour
 
         Debug.Log($"⚔️ Hitbox trúng: {other.gameObject.name} với tag {targetTag}");
 
-        // XỬ LÝ THEO TAG
-        if (targetTag == "Enemy")
+        // XỬ LÝ CHO CẢ ENEMY VÀ BOSS
+        // Thử lấy EnemyHealth trước
+        EnemyHealth enemyHealth = other.GetComponentInParent<EnemyHealth>();
+        if (enemyHealth != null && !enemyHealth.IsDead())
         {
-            // Player đánh Enemy
-            EnemyHealth enemyHealth = other.GetComponentInParent<EnemyHealth>();
-            if (enemyHealth != null && !enemyHealth.IsDead())
-            {
-                enemyHealth.TakeDamage(damage);
-                Debug.Log($"💥 Gây {damage} sát thương cho Enemy");
-                hasHit = true;
-            }
+            enemyHealth.TakeDamage(damage);
+            Debug.Log($"💥 Gây {damage} sát thương cho Enemy");
+            hasHit = true;
+            return;
         }
-        else if (targetTag == "Player")
+        
+        // Nếu không phải Enemy, thử lấy BossHealth
+        BossHealth bossHealth = other.GetComponentInParent<BossHealth>();
+        if (bossHealth != null && !bossHealth.IsDead())
         {
-            // Enemy đánh Player
+            bossHealth.TakeDamage(damage);
+            Debug.Log($"💥 Gây {damage} sát thương cho BOSS");
+            hasHit = true;
+            return;
+        }
+        
+        // Xử lý Player (nếu target là Player)
+        if (targetTag == "Player")
+        {
             PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
             if (playerHealth != null && !playerHealth.IsDead())
             {
@@ -77,6 +84,5 @@ public class AttackHitbox : MonoBehaviour
                 hasHit = true;
             }
         }
-      
     }
 }
